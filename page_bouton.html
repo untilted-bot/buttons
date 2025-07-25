@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <title>Bouton Objectif Fuyant</title>
+  <style>
+    body {
+      margin: 0;
+      background-color: #010A17;
+      height: 100vh;
+      overflow: hidden;
+      position: relative;
+      font-family: Arial, sans-serif;
+    }
+
+    .fuyant {
+      position: absolute;
+      padding: 5px 10px;
+      font-size: 10px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: left 0.3s, top 0.3s;
+      visibility: hidden;
+    }
+
+    .objectif {
+      background-color: #28a745 !important;
+      font-weight: bold;
+      font-size: 11px;
+      visibility: visible !important;
+    }
+  </style>
+</head>
+<body>
+
+  <script>
+    const nbBoutons = 500;
+    const distance = 50;
+    const boutons = [];
+    let boutonObjectif = null;
+
+    const lignes = Math.floor(Math.sqrt(nbBoutons));
+    const colonnes = Math.ceil(nbBoutons / lignes);
+    const margeX = window.innerWidth / colonnes;
+    const margeY = window.innerHeight / lignes;
+
+    for (let i = 0; i < nbBoutons; i++) {
+      const btn = document.createElement("button");
+      btn.classList.add("fuyant");
+      btn.textContent = i + 1;
+
+      const row = Math.floor(i / colonnes);
+      const col = i % colonnes;
+      const initialX = col * margeX + margeX / 4;
+      const initialY = row * margeY + margeY / 4;
+
+      btn.style.left = initialX + "px";
+      btn.style.top = initialY + "px";
+
+      document.body.appendChild(btn);
+
+      boutons.push({
+        element: btn,
+        x: initialX,
+        y: initialY,
+        resetTimeout: null
+      });
+    }
+
+    function choisirNouveauObjectif() {
+      if (boutonObjectif) {
+        boutonObjectif.classList.remove("objectif");
+      }
+
+      const index = Math.floor(Math.random() * boutons.length);
+      boutonObjectif = boutons[index].element;
+      boutonObjectif.classList.add("objectif");
+
+      
+      setTimeout(() => {
+        boutonObjectif.style.visibility = "hidden";
+      }, 2000);
+
+      
+      boutonObjectif.onclick = () => {
+        choisirNouveauObjectif();
+      };
+    }
+
+    
+    choisirNouveauObjectif();
+
+    
+    document.addEventListener("mousemove", (e) => {
+      const mouseX = e.clientX;
+      const mouseY = e.clientY;
+
+      boutons.forEach(obj => {
+        const btn = obj.element;
+        const rect = btn.getBoundingClientRect();
+        const dx = mouseX - (rect.left + rect.width / 2);
+        const dy = mouseY - (rect.top + rect.height / 2);
+        const d = Math.sqrt(dx * dx + dy * dy);
+
+        if (d < distance) {
+          let newX = rect.left - dx * 2;
+          let newY = rect.top - dy * 2;
+
+          const maxX = window.innerWidth - rect.width;
+          const maxY = window.innerHeight - rect.height;
+
+          newX = Math.max(0, Math.min(maxX, newX));
+          newY = Math.max(0, Math.min(maxY, newY));
+
+          btn.style.left = newX + "px";
+          btn.style.top = newY + "px";
+
+          if (obj.resetTimeout) clearTimeout(obj.resetTimeout);
+          obj.resetTimeout = setTimeout(() => {
+            btn.style.left = obj.x + "px";
+            btn.style.top = obj.y + "px";
+          }, 2000);
+        }
+      });
+    });
+  </script>
+
+</body>
+</html>
